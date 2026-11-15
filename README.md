@@ -19,7 +19,7 @@ OCC issues an adjustment memo for each corporate action. Brokers rarely surface 
 
 ## Demo
 
-Open `demo/index.html` in a browser. No build step, no dependencies.
+Open `docs/index.html` in a browser. No build step, no dependencies.
 
 Four scenarios, click to switch. The punch head moves to the affected slot and the readout updates.
 
