@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OCC 合约调整 · 等轴测示意</title>
+<style>
+  :root{--paper:#f2efe9;--ink:#111114;--line:#111114;--accent:#ff5a1f;--mint:#79c9b8;--steel:#b9b6ae}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font:15px/1.55 -apple-system,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:28px}
+  .card{width:min(1080px,100%);background:#fff;border:2px solid var(--ink);
+    box-shadow:10px 10px 0 var(--ink);}
+  .bar{display:flex;justify-content:space-between;align-items:center;
+    padding:12px 18px;border-bottom:2px solid var(--ink);font-size:13px;letter-spacing:.06em}
+  .bar b{font-weight:700}
+  .stage{background:#faf8f4;border-bottom:2px solid var(--ink);padding:6px 0}
+  svg{display:block;width:100%;height:auto}
+  .foot{display:flex;justify-content:space-between;gap:16px;padding:12px 18px;font-size:12.5px;color:#3d3a34}
+  .keys{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px}
+  button{font:inherit;font-size:13px;padding:7px 13px;background:#fff;border:2px solid var(--ink);
+    border-radius:2px;cursor:pointer;box-shadow:3px 3px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+  button:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+  button[aria-pressed="true"]{background:var(--accent);color:#fff}
+  #readout{font-variant-numeric:tabular-nums;font-weight:600}
+  .cap{padding:0 18px 14px;font-size:12.5px;color:#5b574f}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="bar"><span><b>图 1</b> · 期权合约改写台</span><span id="readout">拖一下冲头 →</span></div>
+  <div class="stage"><svg id="fig" viewBox="0 0 1080 660" role="img" aria-label="等轴测示意"></svg></div>
+  <div class="keys">
+    <button data-s="0" aria-pressed="true">① 原合约</button>
+    <button data-s="1">② 全现金收购</button>
+    <button data-s="2">③ 换股 1:0.8</button>
+    <button data-s="3">④ 拆股 2:1</button>
+  </div>
+  <div class="foot"><span>口诀：标的 · 价格 · 数量</span><span>价值不变，字变了</span></div>
+  <div class="cap">三格卡槽就是合约的三件事。冲头依次压过三格，右侧出料口掉落改写后的合约。</div>
+</div>
+<script>
+const K=0.866,S=0.5;
+const iso=(x,y,z)=>[(x-y)*K,(x+y)*S-z];
+const P=(pts,fill,op=1)=>`<polygon points="${pts.map(p=>p.join(",")).join(" ")}" fill="${fill}" fill-opacity="${op}" stroke="#111114" stroke-width="1.1" stroke-linejoin="round"/>`;
+function box(x,y,z,w,d,h,o={}){
+  const top=o.top||"#ffffff",right=o.right||"#d9d5cc",front=o.front||"#b4afa4",op=o.op??1;
+  const A=iso(x,y,z+h),B=iso(x+w,y,z+h),C=iso(x+w,y+d,z+h),D=iso(x,y+d,z+h);
+  const E=iso(x+w,y+d,z),F=iso(x,y+d,z),G=iso(x+w,y,z);
+  return P([A,B,C,D],top,op)+P([C,D,F,E],front,op)+P([B,C,E,G],right,op);
+}
+const svg=document.getElementById("fig");
+const READ=["原合约：标的 LITE｜行权价 $900｜交割 100 股",
+"改写：交割物→现金，行权价不动，到期只算差价",
+"改写：交割物→80 股 MRVL，这已不是 LITE 期权",
+"改写：行权价 900→450，股数 100→200，价值不变"];
+const HEADX=[95,175,255,325];
+function scene(s){
+  let g='<g transform="translate(340,230)">';
+  g+=`<ellipse cx="${iso(230,150,0)[0]}" cy="${iso(230,150,0)[1]+14}" rx="310" ry="42" fill="#111114" opacity=".07"/>`;
+  // 底座 + 四脚
+  g+=box(0,0,0,470,300,12,{top:"#efece5",right:"#cfcac1",front:"#a9a49a"});
+  [[16,16],[418,16],[16,262],[418,262]].forEach(([fx,fy])=>g+=box(fx,fy,-11,28,28,11,{top:"#e7e3da",right:"#c4bfb4",front:"#9c978d"}));
+  // 卡槽导轨（在卡片两侧露出）
+  [34,152,270].forEach(y=>g+=box(50,y,12,250,7,7,{top:"#ffffff",right:"#d2cec5",front:"#aca79d"}));
+  // 合约卡片
+  g+=box(64,44,14,224,196,6,{top:"#ff5a1f",right:"#d4450f",front:"#a8370c"});
+  [86,176,266].forEach(x=>{const a=iso(x,54,20),b=iso(x,230,20);
+    g+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#7d2a08" stroke-width="2"/>`;});
+  // 门架：立柱 + 横梁（压低到卡片上方）
+  g+=box(24,20,12,14,14,104,{top:"#e9e5dc",right:"#c9c4ba",front:"#a29d93"});
+  g+=box(24,266,12,14,14,104,{top:"#e9e5dc",right:"#c9c4ba",front:"#a29d93"});
+  g+=box(24,20,104,14,260,12,{top:"#ffffff",right:"#d5d1c8",front:"#aea99f"});
+  // 冲头（沿横梁滑动）
+  const hx=HEADX[s];
+  const dx=iso(hx,150,0)[0]-iso(HEADX[0],150,0)[0], dy=iso(hx,150,0)[1]-iso(HEADX[0],150,0)[1];
+  g+=`<g style="transition:transform .55s cubic-bezier(.4,0,.2,1)" transform="translate(${dx},${dy})">`;
+  g+=box(HEADX[0]+1,146,104,8,8,26,{top:"#ffffff",right:"#d8d4cb",front:"#b0aba1"});   // 吊杆
+  g+=box(HEADX[0]-20,126,72,44,44,32,{top:"#111114",right:"#2b2b30",front:"#3a3a41"}); // 机身
+  g+=box(HEADX[0]-12,134,50,28,28,22,{top:"#ff5a1f",right:"#d4450f",front:"#a8370c"}); // 冲头
+  g+=box(HEADX[0]-8,138,26,20,20,6,{top:"#ffffff",right:"#d8d4cb",front:"#b0aba1"});   // 刃口
+  g+="</g>";
+  // 右侧三种出料
+  const OUT=[["现金","#79c9b8"],["MRVL","#ff5a1f"],["拆分","#111114"]];
+  OUT.forEach(([lab,col],i)=>{
+    const y=44+i*74, on=(s===i+1);
+    g+=box(368,y,12,58,56,on?40:18,{top:col,right:"#8f8a80",front:"#6f6a61"});
+    const p=iso(368+58,y,on?52:30);
+    g+=`<text x="${p[0]+10}" y="${p[1]+2}" font-size="11" fill="#111114" opacity="${on?1:.42}">${lab}</text>`;
+  });
+  g+="</g>";
+  const t=iso(230,150,150);
+  g+=`<text x="${t[0]}" y="${t[1]}" font-size="11" text-anchor="middle" fill="#111114" opacity=".45">冲 头 · 压 三 格</text>`;
+  svg.innerHTML=g;
+  document.getElementById("readout").innerHTML=READ[s];
+  document.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.s===s)));
+}
+document.querySelectorAll("button").forEach(b=>b.onclick=()=>scene(+b.dataset.s));
+scene(0);
+</script>
+</body>
+</html>
